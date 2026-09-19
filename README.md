@@ -19,6 +19,6 @@ Raccourcisseur d'URL rapide avec suivi analytique en temps réel.
 
 1. **Cloner le projet :**
    ```bash
-   git clone [https://github.com/valanidev/url-shortener.git](https://github.com/valanidev/url-shortener.git)
+   git clone https://github.com/valanidev/url-shortener.git
    cd url-shortener
    ```
