@@ -18,6 +18,7 @@ model User {
 model Link {
   id          String    @id @default(cuid())
   shortCode   String    @unique
+  isActive    Boolean   @default(true)
   originalUrl String
   userId      String?   
   user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)

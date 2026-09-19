@@ -43,3 +43,51 @@ export async function DELETE(
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+    }
+
+    const { id: linkId } = await params
+    const { isActive } = await request.json()
+
+    if (typeof isActive !== "boolean") {
+      return NextResponse.json(
+        { error: "Valeur isActive invalide" },
+        { status: 400 }
+      )
+    }
+
+    const existingLink = await prisma.link.findUnique({
+      where: { id: linkId },
+    })
+
+    if (!existingLink) {
+      return NextResponse.json({ error: "Lien introuvable" }, { status: 404 })
+    }
+
+    if (existingLink.userId !== user.userId) {
+      return NextResponse.json(
+        { error: "Vous n’avez pas l’autorisation de modifier ce lien" },
+        { status: 403 }
+      )
+    }
+
+    const updatedLink = await prisma.link.update({
+      where: { id: linkId },
+      data: { isActive },
+    })
+
+    return NextResponse.json(updatedLink, { status: 200 })
+  } catch (error) {
+    console.error("Erreur modification du lien:", error)
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+  }
+}

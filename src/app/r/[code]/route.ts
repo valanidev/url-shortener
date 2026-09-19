@@ -34,6 +34,13 @@ export async function GET(
     return NextResponse.redirect(new URL("/404", request.url))
   }
 
+  if (!link.isActive) {
+    return NextResponse.json(
+      { error: "Ce lien a été temporairement désactivé par son propriétaire" },
+      { status: 403 }
+    )
+  }
+
   if (link.expiresAt !== null && new Date(link.expiresAt) < new Date()) {
     return NextResponse.redirect(new URL("/404", request.url))
   }
