@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
+import { getAuthUser } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,16 +11,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "URL manquante" }, { status: 400 })
     }
 
+    const user = await getAuthUser()
+
     const shortCode = nanoid(6)
 
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7)
+    let expiresAt: Date | null = null
+    if (!user) {
+      expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 7)
+    }
 
     const newLink = await prisma.link.create({
       data: {
         originalUrl,
         shortCode,
         expiresAt,
+        userId: user ? user.userId : null,
       },
     })
 
