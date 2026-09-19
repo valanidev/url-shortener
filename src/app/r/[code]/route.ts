@@ -34,7 +34,7 @@ export async function GET(
     return NextResponse.redirect(new URL("/404", request.url))
   }
 
-  if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+  if (link.expiresAt !== null && new Date(link.expiresAt) < new Date()) {
     return NextResponse.redirect(new URL("/404", request.url))
   }
 
