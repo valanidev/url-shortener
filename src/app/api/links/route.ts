@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
 import { getAuthUser } from "@/lib/auth"
+import { Prisma } from "@prisma/client"
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,22 +14,48 @@ export async function POST(request: NextRequest) {
 
     const user = await getAuthUser()
 
-    const shortCode = nanoid(6)
-
     let expiresAt: Date | null = null
     if (!user) {
       expiresAt = new Date()
       expiresAt.setDate(expiresAt.getDate() + 7)
     }
 
-    const newLink = await prisma.link.create({
-      data: {
-        originalUrl,
-        shortCode,
-        expiresAt,
-        userId: user ? user.userId : null,
-      },
-    })
+    const maxRetries = 5
+    let attempts = 0
+    let newLink = null
+
+    while (attempts < maxRetries) {
+      try {
+        const shortCode = nanoid(6)
+
+        newLink = await prisma.link.create({
+          data: {
+            originalUrl,
+            shortCode,
+            expiresAt,
+            userId: user ? user.userId : null,
+          },
+        })
+
+        break
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002" // Contrainte d'unicité violée (duplicate key)
+        ) {
+          attempts++
+          continue
+        }
+        throw error
+      }
+    }
+
+    if (!newLink) {
+      return NextResponse.json(
+        { error: "Impossible de générer un code unique, veuillez réessayer" },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(newLink, { status: 201 })
   } catch (error) {
