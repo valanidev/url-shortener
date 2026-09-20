@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { nanoid } from "nanoid"
-import { getAuthUser } from "@/lib/auth"
-import { Prisma } from "@prisma/client"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { nanoid } from 'nanoid'
+import { getAuthUser } from '@/lib/auth'
+import { Prisma } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
     const { originalUrl } = await request.json()
 
     if (!originalUrl) {
-      return NextResponse.json({ error: "URL manquante" }, { status: 400 })
+      return NextResponse.json({ error: 'URL manquante' }, { status: 400 })
     }
 
     const user = await getAuthUser()
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         if (
           error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2002" // Contrainte d'unicité violée (duplicate key)
+          error.code === 'P2002' // Contrainte d'unicité violée (duplicate key)
         ) {
           attempts++
           continue
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     if (!newLink) {
       return NextResponse.json(
-        { error: "Impossible de générer un code unique, veuillez réessayer" },
+        { error: 'Impossible de générer un code unique, veuillez réessayer' },
         { status: 500 }
       )
     }
@@ -60,6 +60,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newLink, { status: 201 })
   } catch (error) {
     console.error("Détail de l'erreur API links:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

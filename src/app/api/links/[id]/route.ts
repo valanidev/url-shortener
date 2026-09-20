@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuthUser } from "@/lib/auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/auth'
 
 export async function DELETE(
   request: NextRequest,
@@ -10,7 +10,7 @@ export async function DELETE(
     const user = await getAuthUser()
 
     if (!user) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
     const { id: linkId } = await params
@@ -20,12 +20,12 @@ export async function DELETE(
     })
 
     if (!existingLink) {
-      return NextResponse.json({ error: "Lien introuvable" }, { status: 404 })
+      return NextResponse.json({ error: 'Lien introuvable' }, { status: 404 })
     }
 
     if (existingLink.userId !== user.userId) {
       return NextResponse.json(
-        { error: "Vous n’avez pas l’autorisation de supprimer ce lien" },
+        { error: 'Vous n’avez pas l’autorisation de supprimer ce lien' },
         { status: 403 }
       )
     }
@@ -35,12 +35,12 @@ export async function DELETE(
     })
 
     return NextResponse.json(
-      { message: "Lien supprimé avec succès" },
+      { message: 'Lien supprimé avec succès' },
       { status: 200 }
     )
   } catch (error) {
-    console.error("Erreur suppression du lien:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    console.error('Erreur suppression du lien:', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
 
@@ -52,15 +52,15 @@ export async function PATCH(
     const user = await getAuthUser()
 
     if (!user) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
     const { id: linkId } = await params
     const { isActive } = await request.json()
 
-    if (typeof isActive !== "boolean") {
+    if (typeof isActive !== 'boolean') {
       return NextResponse.json(
-        { error: "Valeur isActive invalide" },
+        { error: 'Valeur isActive invalide' },
         { status: 400 }
       )
     }
@@ -70,12 +70,12 @@ export async function PATCH(
     })
 
     if (!existingLink) {
-      return NextResponse.json({ error: "Lien introuvable" }, { status: 404 })
+      return NextResponse.json({ error: 'Lien introuvable' }, { status: 404 })
     }
 
     if (existingLink.userId !== user.userId) {
       return NextResponse.json(
-        { error: "Vous n’avez pas l’autorisation de modifier ce lien" },
+        { error: 'Vous n’avez pas l’autorisation de modifier ce lien' },
         { status: 403 }
       )
     }
@@ -87,7 +87,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedLink, { status: 200 })
   } catch (error) {
-    console.error("Erreur modification du lien:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    console.error('Erreur modification du lien:', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
