@@ -17,9 +17,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (password.length < 8) {
+    const minPasswordLength =
+      Number(process.env.NEXT_PUBLIC_MIN_PASSWORD_LENGTH) || 8
+    if (password.length < minPasswordLength) {
       return NextResponse.json(
-        { error: 'Le mot de passe doit contenir au moins 8 caractères' },
+        {
+          error: `Le mot de passe doit contenir au moins ${minPasswordLength} caractères`,
+        },
         { status: 400 }
       )
     }
