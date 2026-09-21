@@ -1,11 +1,11 @@
-import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-import { cookies } from "next/headers"
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import { cookies } from 'next/headers'
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET
   if (!secret) {
-    throw new Error("La variable d’environnement JWT_SECRET n’est pas définie.")
+    throw new Error('La variable d’environnement JWT_SECRET n’est pas définie.')
   }
   return secret
 }
@@ -25,7 +25,7 @@ export function generateToken(payload: {
   userId: string
   email: string
 }): string {
-  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" })
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' })
 }
 
 export function verifyToken(
@@ -43,7 +43,7 @@ export function verifyToken(
 
 export async function getAuthUser() {
   const cookieStore = await cookies()
-  const token = cookieStore.get("token")?.value
+  const token = cookieStore.get('token')?.value
 
   if (!token) return null
   return verifyToken(token)

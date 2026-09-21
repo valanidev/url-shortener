@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Navbar from '../components/Navbar'
+import { login } from '../actions/auth'
 
 function LoginForm() {
   const router = useRouter()
@@ -22,25 +22,18 @@ function LoginForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
+      const res = await login(email, password)
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Identifiants incorrects.')
+      if (!res.success) {
+        setError(res.error)
+        return
       }
 
       router.push('/dashboard')
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Une erreur inconnue est survenue.')
-      }
+      setError(
+        err instanceof Error ? err.message : 'Une erreur inconnue est survenue.'
+      )
     } finally {
       setLoading(false)
     }
@@ -122,18 +115,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background font-sans">
-      <Navbar />
-
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8">
-        <Suspense
-          fallback={
-            <div className="text-sm text-muted-foreground">Chargement...</div>
-          }
-        >
-          <LoginForm />
-        </Suspense>
-      </main>
-    </div>
+    <main className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8">
+      <Suspense
+        fallback={
+          <div className="text-sm text-muted-foreground">Chargement...</div>
+        }
+      >
+        <LoginForm />
+      </Suspense>
+    </main>
   )
 }
