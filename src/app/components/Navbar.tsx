@@ -5,11 +5,6 @@ import UserMenu from './UserMenu'
 export default async function Navbar() {
   const user = await getAuthUser()
 
-  console.log(
-    '--- NAVBAR RENDER --- User status:',
-    user ? user.email : 'DECONNECTE'
-  )
-
   return (
     <header className="w-full border-b border-border-light bg-card">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-8">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Navbar from '../components/Navbar'
+import { createLink, deleteLink, updateLink } from '../actions/links'
 
 interface LinkItem {
   id: string
@@ -81,16 +81,10 @@ export default function DashboardPage() {
     setError(null)
 
     try {
-      const res = await fetch('/api/links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ originalUrl }),
-      })
+      const res = await createLink(originalUrl)
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Erreur lors de la création du lien.')
+      if (res.error) {
+        throw new Error(res.error)
       }
 
       setOriginalUrl('')
@@ -108,11 +102,9 @@ export default function DashboardPage() {
     if (!confirm('Voulez-vous vraiment supprimer ce lien ?')) return
 
     try {
-      const res = await fetch(`/api/links/${id}`, {
-        method: 'DELETE',
-      })
+      const res = await deleteLink(id)
 
-      if (!res.ok) {
+      if (res.error) {
         throw new Error('Erreur lors de la suppression.')
       }
 
@@ -131,13 +123,9 @@ export default function DashboardPage() {
     const newStatus = !currentStatus
 
     try {
-      const res = await fetch(`/api/links/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: newStatus }),
-      })
+      const res = await updateLink(id, { isActive: newStatus })
 
-      if (!res.ok) {
+      if (res.error) {
         throw new Error("Erreur lors du changement d'état.")
       }
 

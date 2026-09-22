@@ -4,9 +4,16 @@ import type { NextRequest } from 'next/server'
 export function proxy(request: NextRequest) {
   const token = request.cookies.get('token')?.value
 
+  const isAuthRoute =
+    request.nextUrl.pathname === '/login' ||
+    request.nextUrl.pathname === '/register'
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
 
-  if (isDashboardRoute && !token) {
+  if (token && isAuthRoute) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  if (!token && isDashboardRoute) {
     const loginUrl = new URL('/login', request.url)
     return NextResponse.redirect(loginUrl)
   }
@@ -15,5 +22,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/login', '/register'],
 }

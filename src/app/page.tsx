@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react'
 import LinkResultCard from './components/LinkResultCard'
+import { createLink } from './actions/links'
 
 export default function HomePage() {
   const [originalUrl, setOriginalUrl] = useState('')
@@ -16,19 +17,13 @@ export default function HomePage() {
     setShortUrl(null)
 
     try {
-      const res = await fetch('/api/links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ originalUrl }),
-      })
+      const res = await createLink(originalUrl)
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Une erreur est survenue')
+      if (res.error) {
+        throw new Error(res.error)
       }
 
-      const generatedUrl = `${window.location.origin}/r/${data.shortCode}`
+      const generatedUrl = `${window.location.origin}/r/${res.link?.shortCode}`
       setShortUrl(generatedUrl)
       setOriginalUrl('')
     } catch (err: unknown) {
