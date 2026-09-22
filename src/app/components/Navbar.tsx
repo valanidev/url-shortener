@@ -30,7 +30,6 @@ export default async function Navbar() {
                 Mes Liens
               </Link>
 
-              {/* Composant interactif contenant la lettre et le menu */}
               <UserMenu email={user.email} />
             </>
           ) : (
