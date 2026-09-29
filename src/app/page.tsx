@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react'
 import LinkResultCard from './components/LinkResultCard'
 import { createLink } from './actions/links'
+import Input from './components/ui/Input'
 
 export default function HomePage() {
   const [originalUrl, setOriginalUrl] = useState('')
@@ -69,13 +70,14 @@ export default function HomePage() {
             />
           </svg>
 
-          <input
+          <Input
+            variant="unstyled"
             type="url"
             required
             placeholder="Collez votre longue URL ici..."
             value={originalUrl}
             onChange={(e) => setOriginalUrl(e.target.value)}
-            className="placeholder-subtle flex-1 bg-transparent text-sm text-foreground focus:outline-none sm:text-base"
+            className="flex-1 text-sm sm:text-base"
           />
 
           <button

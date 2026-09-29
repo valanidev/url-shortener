@@ -14,7 +14,13 @@ export async function GET(
 
     const { id } = await params
     const { searchParams } = new URL(request.url)
-    const period = searchParams.get('period') || '30d'
+
+    const VALID_PERIODS = ['1h', '24h', '7d', '30d', 'all'] as const
+    type Period = (typeof VALID_PERIODS)[number]
+    const rawPeriod = searchParams.get('period')
+    const period: Period = VALID_PERIODS.includes(rawPeriod as Period)
+      ? (rawPeriod as Period)
+      : '30d'
 
     const now = new Date()
     let startDate: Date | null = new Date()
@@ -27,7 +33,7 @@ export async function GET(
       startDate.setDate(startDate.getDate() - 7)
     } else if (period === '30d') {
       startDate.setDate(startDate.getDate() - 30)
-    } else {
+    } else if (period === 'all') {
       startDate = null
     }
 

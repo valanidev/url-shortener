@@ -34,7 +34,11 @@ function normalizeUrl(url: string): string {
   return parsed.toString()
 }
 
-export async function createLink(originalUrl: string) {
+export async function createLink(
+  originalUrl: string,
+  customSlug?: string,
+  durationSeconds?: number | null
+) {
   if (!originalUrl) {
     return { error: 'URL manquante' }
   }
@@ -44,9 +48,56 @@ export async function createLink(originalUrl: string) {
   const user = await getAuthUser()
 
   let expiresAt: Date | null = null
-  if (!user) {
-    expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7)
+  if (durationSeconds && durationSeconds > 0) {
+    expiresAt = new Date(Date.now() + durationSeconds * 1000)
+  } else if (!user && durationSeconds === undefined) {
+    expiresAt = new Date(Date.now() + 7 * 24 * 3600 * 1000)
+  }
+
+  if (customSlug && customSlug.trim() !== '') {
+    const slug = customSlug.trim()
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(slug)) {
+      return {
+        error:
+          'Le lien personnalisé ne peut contenir que des lettres, chiffres, tirets et underscores',
+      }
+    }
+
+    const MIN_SLUG_LENGTH = 6
+    const MAX_SLUG_LENGTH = 16
+    if (slug.length < MIN_SLUG_LENGTH || slug.length > MAX_SLUG_LENGTH) {
+      return {
+        error: `Le lien personnalisé doit contenir entre ${MIN_SLUG_LENGTH} et ${MAX_SLUG_LENGTH} caractères`,
+      }
+    }
+
+    const existing = await prisma.link.findUnique({
+      where: { shortCode: slug },
+    })
+
+    if (existing) {
+      return { error: 'Ce lien personnalisé est déjà utilisé' }
+    }
+
+    try {
+      const newLink = await prisma.link.create({
+        data: {
+          originalUrl: normalizedUrl,
+          shortCode: slug,
+          expiresAt,
+          userId: user ? user.userId : null,
+        },
+      })
+
+      revalidatePath('/')
+      revalidatePath('/dashboard')
+
+      return { link: newLink }
+    } catch (error) {
+      console.error('Erreur création custom slug:', error)
+      return { error: 'Impossible de créer le lien personnalisé' }
+    }
   }
 
   const maxRetries = 5

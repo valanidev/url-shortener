@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { register } from '../actions/auth'
+import Input from '../components/ui/Input'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -72,13 +73,13 @@ export default function RegisterPage() {
             <label className="mb-1.5 block text-xs font-bold tracking-wider text-muted-foreground uppercase">
               Adresse email
             </label>
-            <input
+            <Input
               type="email"
               required
               placeholder="nom@exemple.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground transition focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none"
+              className="w-full"
             />
           </div>
 
@@ -86,13 +87,13 @@ export default function RegisterPage() {
             <label className="mb-1.5 block text-xs font-bold tracking-wider text-muted-foreground uppercase">
               Mot de passe
             </label>
-            <input
+            <Input
               type="password"
               required
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground transition focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none"
+              className="w-full"
             />
           </div>
 
@@ -100,13 +101,13 @@ export default function RegisterPage() {
             <label className="mb-1.5 block text-xs font-bold tracking-wider text-muted-foreground uppercase">
               Confirmer le mot de passe
             </label>
-            <input
+            <Input
               type="password"
               required
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground transition focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none"
+              className="w-full"
             />
           </div>
 

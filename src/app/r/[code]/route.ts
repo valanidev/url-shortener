@@ -7,7 +7,7 @@ async function getCountryFromIp(ip: string): Promise<string> {
 
   try {
     const response = await fetch(
-      `http://ip-api.com/json/${ip}?fields=countryCode`,
+      `https://ip-api.com/json/${ip}?fields=countryCode`,
       {
         signal: AbortSignal.timeout(1500),
       }

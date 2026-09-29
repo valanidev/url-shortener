@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createLink, deleteLink, updateLink } from '../actions/links'
+import Input from '../components/ui/Input'
 
 interface LinkItem {
   id: string
@@ -11,6 +12,7 @@ interface LinkItem {
   shortCode: string
   createdAt: string
   isActive?: boolean
+  expiresAt?: string | null
   _count?: {
     clicks: number
   }
@@ -24,6 +26,11 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [originalUrl, setOriginalUrl] = useState('')
+  const [customSlug, setCustomSlug] = useState('')
+
+  const [durationValue, setDurationValue] = useState<number | ''>(1)
+  const [durationUnit, setDurationUnit] = useState<string>('unlimited')
+
   const [creating, setCreating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [togglingId, setTogglingId] = useState<string | null>(null)
@@ -80,14 +87,41 @@ export default function DashboardPage() {
     setCreating(true)
     setError(null)
 
+    let totalSeconds: number | null = null
+
+    if (
+      durationUnit !== 'unlimited' &&
+      durationValue &&
+      Number(durationValue) > 0
+    ) {
+      const val = Number(durationValue)
+      switch (durationUnit) {
+        case 'seconds':
+          totalSeconds = val
+          break
+        case 'minutes':
+          totalSeconds = val * 60
+          break
+        case 'hours':
+          totalSeconds = val * 60 * 60
+          break
+        case 'days':
+          totalSeconds = val * 60 * 60 * 24
+          break
+      }
+    }
+
     try {
-      const res = await createLink(originalUrl)
+      const res = await createLink(originalUrl, customSlug, totalSeconds)
 
       if (res.error) {
         throw new Error(res.error)
       }
 
       setOriginalUrl('')
+      setCustomSlug('')
+      setDurationValue(1)
+      setDurationUnit('unlimited')
       await refreshLinks()
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -166,25 +200,66 @@ export default function DashboardPage() {
           Raccourcir un nouveau lien
         </h2>
 
-        <form
-          onSubmit={handleCreate}
-          className="flex flex-col gap-3 sm:flex-row"
-        >
-          <input
-            type="url"
-            required
-            placeholder="https://votre-lien-tres-long.com/vraiment-long"
-            value={originalUrl}
-            onChange={(e) => setOriginalUrl(e.target.value)}
-            className="flex-1 rounded-xl border border-border bg-card-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground transition focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={creating}
-            className="shrink-0 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-hover disabled:opacity-50"
-          >
-            {creating ? 'Création...' : 'Raccourcir'}
-          </button>
+        <form onSubmit={handleCreate} className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:flex-row">
+            <Input
+              type="url"
+              required
+              placeholder="https://votre-lien-tres-long.com/vraiment-long"
+              value={originalUrl}
+              onChange={(e) => setOriginalUrl(e.target.value)}
+              className="flex-1"
+            />
+
+            <Input
+              placeholder="Lien personnalisé"
+              value={customSlug}
+              onChange={(e) => setCustomSlug(e.target.value)}
+              className="w-full lg:w-48"
+            />
+
+            <div className="flex shrink-0 items-center rounded-xl border border-border bg-card-muted transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-light">
+              {durationUnit !== 'unlimited' && (
+                <Input
+                  variant="unstyled"
+                  type="number"
+                  min="1"
+                  required
+                  placeholder="Durée"
+                  value={durationValue}
+                  onChange={(e) =>
+                    setDurationValue(
+                      e.target.value ? Number(e.target.value) : ''
+                    )
+                  }
+                  className="w-20 px-3 py-2.5"
+                />
+              )}
+              <select
+                value={durationUnit}
+                onChange={(e) => setDurationUnit(e.target.value)}
+                className={`w-full bg-transparent py-2.5 text-sm font-medium text-foreground focus:outline-none ${
+                  durationUnit === 'unlimited'
+                    ? 'px-4'
+                    : 'border-l border-border pr-3 pl-1'
+                }`}
+              >
+                <option value="unlimited">Durée illimitée</option>
+                <option value="seconds">Seconde(s)</option>
+                <option value="minutes">Minute(s)</option>
+                <option value="hours">Heure(s)</option>
+                <option value="days">Jour(s)</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              disabled={creating}
+              className="shrink-0 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-hover disabled:opacity-50"
+            >
+              {creating ? 'Création...' : 'Raccourcir'}
+            </button>
+          </div>
         </form>
 
         {error && (
@@ -216,6 +291,10 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {links.map((link) => {
               const isActive = link.isActive ?? true
+              const isExpired = link.expiresAt
+                ? new Date(link.expiresAt) < new Date()
+                : false
+
               return (
                 <div
                   key={link.id}
@@ -232,16 +311,21 @@ export default function DashboardPage() {
                         {(link._count?.clicks ?? 0) !== 1 ? 'clics' : 'clic'}
                       </span>
 
-                      {/* Badge Actif / En pause */}
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
-                          isActive
-                            ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
-                            : 'border-amber-500/20 bg-amber-500/10 text-amber-600'
-                        }`}
-                      >
-                        {isActive ? 'Actif' : 'En pause'}
-                      </span>
+                      {isExpired ? (
+                        <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-600">
+                          Expiré
+                        </span>
+                      ) : (
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                            isActive
+                              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
+                              : 'border-amber-500/20 bg-amber-500/10 text-amber-600'
+                          }`}
+                        >
+                          {isActive ? 'Actif' : 'En pause'}
+                        </span>
+                      )}
                     </div>
 
                     <p className="max-w-md truncate text-xs text-muted-foreground">
@@ -250,11 +334,10 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
-                    {/* Bouton Pause / Réactiver */}
                     <button
                       onClick={() => togglePause(link.id, isActive)}
-                      disabled={togglingId === link.id}
-                      className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                      disabled={togglingId === link.id || isExpired}
+                      className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition disabled:opacity-40 ${
                         isActive
                           ? 'border-border bg-card-muted text-foreground hover:bg-muted'
                           : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'

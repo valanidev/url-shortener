@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '../actions/auth'
+import Input from '../components/ui/Input'
 
 function LoginForm() {
   const router = useRouter()
@@ -61,13 +62,13 @@ function LoginForm() {
           <label className="mb-1.5 block text-xs font-bold tracking-wider text-muted-foreground uppercase">
             Adresse email
           </label>
-          <input
+          <Input
             type="email"
             required
             placeholder="nom@exemple.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground transition focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none"
+            className="w-full"
           />
         </div>
 
@@ -75,13 +76,13 @@ function LoginForm() {
           <label className="mb-1.5 block text-xs font-bold tracking-wider text-muted-foreground uppercase">
             Mot de passe
           </label>
-          <input
+          <Input
             type="password"
             required
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground transition focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none"
+            className="w-full"
           />
         </div>
 
