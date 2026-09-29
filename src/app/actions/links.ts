@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import { getAuthUser } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 
 function normalizeUrl(url: string): string {
   const trimmed = url.trim()
@@ -136,6 +137,16 @@ export async function createLink(
 
   revalidatePath('/')
   revalidatePath('/dashboard')
+
+  if (!user && newLink) {
+    const cookieStore = await cookies()
+    cookieStore.set('pending_link_id', newLink.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24,
+      path: '/',
+    })
+  }
 
   return { link: newLink }
 }

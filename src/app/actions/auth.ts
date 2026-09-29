@@ -97,6 +97,16 @@ export async function register(
       select: { id: true, email: true, createdAt: true },
     })
 
+    const cookieStore = await cookies()
+    const pendingLinkId = cookieStore.get('pending_link_id')?.value
+    if (pendingLinkId) {
+      await prisma.link.update({
+        where: { id: pendingLinkId, userId: null },
+        data: { userId: user.id, expiresAt: null },
+      })
+      cookieStore.delete('pending_link_id')
+    }
+
     return { success: true, message: 'Compte créé avec succès', data: user }
   } catch (error) {
     console.error("Erreur lors de l'inscription:", error)
