@@ -2,7 +2,12 @@
 
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, verifyPassword, generateToken } from '@/lib/auth'
+import {
+  hashPassword,
+  verifyPassword,
+  generateToken,
+  getAuthUser,
+} from '@/lib/auth'
 
 type ActionResult<T = undefined> =
   | { success: true; message: string; data?: T }
@@ -110,6 +115,109 @@ export async function register(
     return { success: true, message: 'Compte créé avec succès', data: user }
   } catch (error) {
     console.error("Erreur lors de l'inscription:", error)
+    return { success: false, error: 'Erreur serveur' }
+  }
+}
+
+export async function updatePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+): Promise<ActionResult> {
+  try {
+    const authUser = await getAuthUser()
+    if (!authUser) {
+      return { success: false, error: 'Non authentifié' }
+    }
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return { success: false, error: 'Veuillez remplir tous les champs' }
+    }
+
+    if (newPassword !== confirmPassword) {
+      return {
+        success: false,
+        error: 'Les nouveaux mots de passe ne correspondent pas',
+      }
+    }
+
+    if (currentPassword === newPassword) {
+      return {
+        success: false,
+        error: "Le nouveau mot de passe doit être différent de l'ancien",
+      }
+    }
+
+    const minPasswordLength =
+      Number(process.env.NEXT_PUBLIC_MIN_PASSWORD_LENGTH) || 8
+    if (newPassword.length < minPasswordLength) {
+      return {
+        success: false,
+        error: `Le nouveau mot de passe doit contenir au moins ${minPasswordLength} caractères`,
+      }
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: authUser.userId },
+    })
+
+    if (!user) {
+      return { success: false, error: 'Utilisateur introuvable' }
+    }
+
+    const isValid = await verifyPassword(currentPassword, user.password)
+    if (!isValid) {
+      return { success: false, error: 'Mot de passe actuel incorrect' }
+    }
+
+    const hashedPassword = await hashPassword(newPassword)
+
+    await prisma.user.update({
+      where: { id: authUser.userId },
+      data: { password: hashedPassword },
+    })
+
+    return { success: true, message: 'Mot de passe mis à jour avec succès' }
+  } catch (error) {
+    console.error('Erreur mise à jour mot de passe:', error)
+    return { success: false, error: 'Erreur serveur' }
+  }
+}
+
+export async function deleteAccount(password: string): Promise<ActionResult> {
+  try {
+    const authUser = await getAuthUser()
+    if (!authUser) {
+      return { success: false, error: 'Non authentifié' }
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: authUser.userId },
+    })
+
+    if (!user) {
+      return { success: false, error: 'Utilisateur introuvable' }
+    }
+
+    const isValid = await verifyPassword(password, user.password)
+    if (!isValid) {
+      return { success: false, error: 'Mot de passe incorrect' }
+    }
+
+    await prisma.user.delete({ where: { id: authUser.userId } })
+
+    const cookieStore = await cookies()
+    cookieStore.set('token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: new Date(0),
+    })
+
+    return { success: true, message: 'Compte supprimé avec succès' }
+  } catch (error) {
+    console.error('Erreur suppression compte:', error)
     return { success: false, error: 'Erreur serveur' }
   }
 }
