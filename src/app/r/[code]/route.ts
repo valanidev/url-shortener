@@ -50,6 +50,17 @@ export async function GET(
   const os = parser.getOS().name || 'Inconnu'
   const browser = parser.getBrowser().name || 'Inconnu'
 
+  const refererHeader = request.headers.get('referer')
+  let referer = 'Direct'
+
+  if (refererHeader) {
+    try {
+      referer = new URL(refererHeader).hostname.replace(/^www\./, '')
+    } catch {
+      referer = 'Inconnu'
+    }
+  }
+
   const rawIp =
     request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
 
@@ -61,6 +72,7 @@ export async function GET(
           os,
           browser,
           country,
+          referer,
         },
       })
     })

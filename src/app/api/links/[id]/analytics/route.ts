@@ -56,10 +56,10 @@ export async function GET(
 
     const totalClicks = link.clicks.length
 
-    const aggregateBy = (key: 'country' | 'browser' | 'os') => {
+    const aggregateBy = (key: 'country' | 'browser' | 'os' | 'referer') => {
       const counts: Record<string, number> = {}
       link.clicks.forEach((click) => {
-        const val = click[key] || 'Inconnu'
+        const val = click[key] || (key === 'referer' ? 'Direct' : 'Inconnu')
         counts[val] = (counts[val] || 0) + 1
       })
       return Object.entries(counts)
@@ -67,14 +67,13 @@ export async function GET(
         .sort((a, b) => b.count - a.count)
     }
 
-    // Génération des créneaux temporels
     const timeSlots: Record<string, number> = {}
 
     if (period === '1h') {
       for (let i = 59; i >= 0; i--) {
         const d = new Date(now)
         d.setMinutes(d.getMinutes() - i)
-        const minStr = d.toISOString().substring(0, 16) // Format YYYY-MM-DDTHH:mm
+        const minStr = d.toISOString().substring(0, 16)
         timeSlots[minStr] = 0
       }
       link.clicks.forEach((click) => {
@@ -106,7 +105,6 @@ export async function GET(
         if (timeSlots[dateStr] !== undefined) timeSlots[dateStr]++
       })
     } else {
-      // Pour 'all', agréger par jour à partir de la date du premier clic / création
       link.clicks.forEach((click) => {
         const dateStr = new Date(click.createdAt).toISOString().split('T')[0]
         timeSlots[dateStr] = (timeSlots[dateStr] || 0) + 1
@@ -129,6 +127,7 @@ export async function GET(
       topCountries: aggregateBy('country'),
       topBrowsers: aggregateBy('browser'),
       topOs: aggregateBy('os'),
+      topReferers: aggregateBy('referer'),
       recentClicks: [...link.clicks].reverse().slice(0, 10),
       clicksOverTime,
       period,

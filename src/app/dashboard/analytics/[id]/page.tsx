@@ -39,12 +39,14 @@ interface AnalyticsData {
   topCountries: { name: string; count: number }[]
   topBrowsers: { name: string; count: number }[]
   topOs: { name: string; count: number }[]
+  topReferers?: { name: string; count: number }[]
   recentClicks: {
     id: string
     createdAt: string
     country?: string
     browser?: string
     os?: string
+    referer?: string
   }[]
   clicksOverTime: { time: string; count: number }[]
   period: string
@@ -254,7 +256,35 @@ export default function AnalyticsPage({
           </div>
 
           {/* Grille des répartitions */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Sources / Referers */}
+            <div className="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                Sources (Referers)
+              </h2>
+              {!data.topReferers || data.topReferers.length === 0 ? (
+                <p className="py-2 text-xs text-muted-foreground">
+                  Aucune donnée
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {data.topReferers.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between text-xs"
+                    >
+                      <span className="truncate font-semibold text-foreground">
+                        {item.name}
+                      </span>
+                      <span className="rounded-lg border border-border bg-card-muted px-2 py-0.5 font-bold text-primary">
+                        {item.count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Top Pays */}
             <div className="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
               <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">

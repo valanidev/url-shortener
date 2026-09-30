@@ -39,6 +39,7 @@ model Click {
   country   String?  
   os        String?  
   browser   String?  
+  referer   String?
 
   @@index([linkId])
 }
