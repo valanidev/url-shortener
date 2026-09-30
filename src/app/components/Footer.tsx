@@ -18,6 +18,12 @@ export default function Footer() {
             CGU
           </Link>
           <Link
+            href="/politique-de-confidentialite"
+            className="transition hover:text-foreground hover:underline"
+          >
+            Confidentialité
+          </Link>
+          <Link
             href="/mentions-legales"
             className="transition hover:text-foreground hover:underline"
           >
